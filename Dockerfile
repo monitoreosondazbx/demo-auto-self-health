@@ -4,7 +4,9 @@ WORKDIR /app
 
 RUN npm install -g pnpm@9
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+# pnpm 9 requiere el campo 'packages' cuando existe pnpm-workspace.yaml
+RUN printf 'packages:\n  - "."\nonlyBuiltDependencies:\n  - sharp\n  - unrs-resolver\n' > pnpm-workspace.yaml
 RUN pnpm install --frozen-lockfile
 
 # ── Stage 2: Build de producción ──────────────────────────────────────────────
@@ -17,6 +19,8 @@ RUN npm install -g pnpm@9
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Sobrescribir workspace config con el campo packages requerido
+RUN printf 'packages:\n  - "."\nonlyBuiltDependencies:\n  - sharp\n  - unrs-resolver\n' > pnpm-workspace.yaml
 
 RUN pnpm build
 
